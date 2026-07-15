@@ -305,7 +305,7 @@ body,
   font-size: 13px;
   cursor: pointer;
 }
-.toolbar button:hover {
+.toolbar button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.14);
 }
 .toolbar button:disabled {

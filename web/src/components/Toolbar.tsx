@@ -6,6 +6,8 @@ import type { CardType } from "../types";
 
 export function Toolbar() {
   const mode = useBoard((s) => s.mode);
+  const canUndo = useBoard((s) => s.past.length > 0);
+  const canRedo = useBoard((s) => s.future.length > 0);
   const { viewportRef } = useBoardContext();
 
   const viewportRect = () => viewportRef.current?.getBoundingClientRect();
@@ -71,6 +73,22 @@ export function Toolbar() {
           <button onClick={() => addCard("document")} title="Add document">＋ Doc</button>
         </>
       )}
+
+      <span className="sep" />
+      <button
+        onClick={() => void useBoard.getState().undo()}
+        disabled={!canUndo}
+        title="Undo (Ctrl+Z)"
+      >
+        ↶ Undo
+      </button>
+      <button
+        onClick={() => void useBoard.getState().redo()}
+        disabled={!canRedo}
+        title="Redo"
+      >
+        ↷ Redo
+      </button>
 
       <span className="sep" />
       <button onClick={() => zoom(1.25)} title="Zoom in">＋</button>

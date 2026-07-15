@@ -18,6 +18,8 @@ export function Card({ card }: { card: CardT }) {
   const editable = mode === "edit";
   const { viewportRef } = useBoardContext();
   const drag = useRef<{ startX: number; startY: number } | null>(null);
+  // Snapshot of the card when a drag begins, so the move can be recorded for undo.
+  const dragBefore = useRef<CardT | null>(null);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (isInteractiveTarget(e.target as HTMLElement)) return;
@@ -25,6 +27,7 @@ export function Card({ card }: { card: CardT }) {
     useBoard.getState().select(card.id);
     if (!editable) return;
     e.stopPropagation();
+    dragBefore.current = { ...useBoard.getState().cards[card.id] };
     useBoard.getState().updateCardLocal(card.id, { z: Date.now() });
     drag.current = { startX: e.clientX, startY: e.clientY };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -45,7 +48,10 @@ export function Card({ card }: { card: CardT }) {
     if (!drag.current) return;
     drag.current = null;
     (e.currentTarget as HTMLElement).classList.remove("dragging");
-    void useBoard.getState().commitCard(card.id);
+    const before = dragBefore.current;
+    dragBefore.current = null;
+    if (before) void useBoard.getState().commitCardMove(card.id, before);
+    else void useBoard.getState().commitCard(card.id);
   };
 
   const onDoubleClick = (e: React.MouseEvent) => {
@@ -91,8 +97,12 @@ export function Card({ card }: { card: CardT }) {
 }
 
 function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
+  const editStart = useRef<CardT | null>(null);
   const patch = (p: Partial<CardT>) => useBoard.getState().updateCardLocal(card.id, p);
-  const commit = (p: Partial<CardT>) => void useBoard.getState().patchCard(card.id, p);
+  const beginEdit = () => (editStart.current = { ...card });
+  const saveEdit = () => {
+    if (editStart.current) void useBoard.getState().commitEdit(card.id, editStart.current);
+  };
 
   if (card.type === "photo") return <PhotoBody card={card} editable={editable} />;
 
@@ -106,8 +116,9 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
             className="card-title"
             value={card.title}
             placeholder="Document title"
+            onFocus={beginEdit}
             onChange={(e) => patch({ title: e.target.value })}
-            onBlur={(e) => commit({ title: e.target.value })}
+            onBlur={saveEdit}
           />
         ) : (
           <div className="card-title">{card.title || "Document"}</div>
@@ -119,8 +130,9 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
             className="card-input"
             value={card.url}
             placeholder="https://…"
+            onFocus={beginEdit}
             onChange={(e) => patch({ url: e.target.value })}
-            onBlur={(e) => commit({ url: e.target.value })}
+            onBlur={saveEdit}
           />
         ) : card.url ? (
           <a className="card-url" href={card.url} target="_blank" rel="noreferrer">
@@ -141,15 +153,17 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
             className="card-title"
             value={card.title}
             placeholder="Title"
+            onFocus={beginEdit}
             onChange={(e) => patch({ title: e.target.value })}
-            onBlur={(e) => commit({ title: e.target.value })}
+            onBlur={saveEdit}
           />
           <textarea
             className="card-body"
             value={card.body}
             placeholder="Write a note…"
+            onFocus={beginEdit}
             onChange={(e) => patch({ body: e.target.value })}
-            onBlur={(e) => commit({ body: e.target.value })}
+            onBlur={saveEdit}
           />
         </>
       ) : (
@@ -165,8 +179,8 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
 }
 
 function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
+  const editStart = useRef<CardT | null>(null);
   const patch = (p: Partial<CardT>) => useBoard.getState().updateCardLocal(card.id, p);
-  const commit = (p: Partial<CardT>) => void useBoard.getState().patchCard(card.id, p);
 
   return (
     <>
@@ -175,8 +189,11 @@ function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
           className="card-body sticky-memo"
           value={card.body}
           placeholder="Write a memo…"
+          onFocus={() => (editStart.current = { ...card })}
           onChange={(e) => patch({ body: e.target.value })}
-          onBlur={(e) => commit({ body: e.target.value })}
+          onBlur={() => {
+            if (editStart.current) void useBoard.getState().commitEdit(card.id, editStart.current);
+          }}
         />
       ) : (
         <div className="card-body sticky-memo" style={{ whiteSpace: "pre-wrap" }}>
@@ -193,7 +210,9 @@ function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
               title="Change color"
               onClick={(e) => {
                 e.stopPropagation();
-                commit({ color: c });
+                const before = { ...card };
+                useBoard.getState().updateCardLocal(card.id, { color: c });
+                void useBoard.getState().commitEdit(card.id, before);
               }}
             />
           ))}
@@ -205,6 +224,7 @@ function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
 
 function PhotoBody({ card, editable }: { card: CardT; editable: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const editStart = useRef<CardT | null>(null);
   const src = fileUrl(card.id, card.image);
   return (
     <>
@@ -222,8 +242,11 @@ function PhotoBody({ card, editable }: { card: CardT; editable: boolean }) {
           style={{ border: "none", background: "transparent", textAlign: "center" }}
           value={card.title}
           placeholder="caption…"
+          onFocus={() => (editStart.current = { ...card })}
           onChange={(e) => useBoard.getState().updateCardLocal(card.id, { title: e.target.value })}
-          onBlur={(e) => useBoard.getState().patchCard(card.id, { title: e.target.value })}
+          onBlur={() => {
+            if (editStart.current) void useBoard.getState().commitEdit(card.id, editStart.current);
+          }}
         />
       ) : (
         <div className="caption">{card.title}</div>

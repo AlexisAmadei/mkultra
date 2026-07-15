@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBoard } from "../store/boardStore";
 import { usePanZoom } from "../hooks/usePanZoom";
+import { useUndoRedo } from "../hooks/useUndoRedo";
 import { screenToWorld } from "../hooks/panzoom-math";
 import { pinAnchor } from "../lib/geometry";
 import { BoardContext } from "./BoardContext";
@@ -45,6 +46,7 @@ export function Board() {
   const error = useBoard((s) => s.error);
 
   usePanZoom(el);
+  useUndoRedo();
 
   // Pending connection drag (edit mode: pin -> another card).
   const [pending, setPending] = useState<{ from: Vec2; to: Vec2 } | null>(null);
