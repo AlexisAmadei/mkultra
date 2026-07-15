@@ -1,0 +1,12 @@
+# dependencies / build
+node_modules/
+web/dist/
+web/node_modules/
+
+# pocketbase runtime data (db + uploaded files) and binary
+pb/pb_data/
+pb/pocketbase
+
+# misc
+.DS_Store
+*.log
