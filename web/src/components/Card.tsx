@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useBoard } from "../store/boardStore";
+import { STICKY_COLORS, useBoard } from "../store/boardStore";
 import { fileUrl } from "../lib/pocketbase";
 import type { Card as CardT } from "../types";
 import { Pin } from "./Pin";
@@ -7,6 +7,10 @@ import { useBoardContext } from "./BoardContext";
 import { focusRect } from "../hooks/usePanZoom";
 
 const INTERACTIVE = new Set(["INPUT", "TEXTAREA", "BUTTON", "A"]);
+
+function isInteractiveTarget(target: HTMLElement): boolean {
+  return INTERACTIVE.has(target.tagName) || target.closest(".photo-frame") !== null;
+}
 
 export function Card({ card }: { card: CardT }) {
   const mode = useBoard((s) => s.mode);
@@ -16,7 +20,7 @@ export function Card({ card }: { card: CardT }) {
   const drag = useRef<{ startX: number; startY: number } | null>(null);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (INTERACTIVE.has((e.target as HTMLElement).tagName)) return;
+    if (isInteractiveTarget(e.target as HTMLElement)) return;
     // Bring to front + select regardless of mode; only drag in edit mode.
     useBoard.getState().select(card.id);
     if (!editable) return;
@@ -45,7 +49,7 @@ export function Card({ card }: { card: CardT }) {
   };
 
   const onDoubleClick = (e: React.MouseEvent) => {
-    if (INTERACTIVE.has((e.target as HTMLElement).tagName)) return;
+    if (isInteractiveTarget(e.target as HTMLElement)) return;
     focusRect(viewportRef.current, card);
   };
 
@@ -91,6 +95,8 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
   const commit = (p: Partial<CardT>) => void useBoard.getState().patchCard(card.id, p);
 
   if (card.type === "photo") return <PhotoBody card={card} editable={editable} />;
+
+  if (card.type === "sticky") return <StickyBody card={card} editable={editable} />;
 
   if (card.type === "document") {
     return (
@@ -153,6 +159,45 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
             {card.body}
           </div>
         </>
+      )}
+    </>
+  );
+}
+
+function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
+  const patch = (p: Partial<CardT>) => useBoard.getState().updateCardLocal(card.id, p);
+  const commit = (p: Partial<CardT>) => void useBoard.getState().patchCard(card.id, p);
+
+  return (
+    <>
+      {editable ? (
+        <textarea
+          className="card-body sticky-memo"
+          value={card.body}
+          placeholder="Write a memo…"
+          onChange={(e) => patch({ body: e.target.value })}
+          onBlur={(e) => commit({ body: e.target.value })}
+        />
+      ) : (
+        <div className="card-body sticky-memo" style={{ whiteSpace: "pre-wrap" }}>
+          {card.body}
+        </div>
+      )}
+      {editable && (
+        <div className="sticky-swatches">
+          {STICKY_COLORS.map((c) => (
+            <button
+              key={c}
+              className={`sticky-swatch${card.color === c ? " active" : ""}`}
+              style={{ background: c }}
+              title="Change color"
+              onClick={(e) => {
+                e.stopPropagation();
+                commit({ color: c });
+              }}
+            />
+          ))}
+        </div>
       )}
     </>
   );

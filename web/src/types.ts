@@ -5,7 +5,7 @@ export type Transform = { tx: number; ty: number; scale: number };
 
 export type Mode = "view" | "edit";
 
-export type CardType = "text" | "photo" | "document";
+export type CardType = "text" | "photo" | "document" | "sticky";
 
 export interface Card {
   id: string;

@@ -28,13 +28,10 @@ body,
   touch-action: none;
   overflow: hidden;
   background-color: #b8894b;
-  /* Layered cork texture: warm base + speckle + soft shading. */
-  background-image: radial-gradient(circle at 20% 30%, rgba(120, 78, 32, 0.35) 0 2px, transparent 3px),
-    radial-gradient(circle at 70% 60%, rgba(90, 56, 20, 0.3) 0 2px, transparent 3px),
-    radial-gradient(circle at 45% 80%, rgba(150, 105, 55, 0.3) 0 2px, transparent 3px),
-    radial-gradient(circle at 85% 25%, rgba(80, 48, 16, 0.28) 0 1px, transparent 2px),
-    radial-gradient(circle at 10% 70%, rgba(150, 105, 55, 0.25) 0 1px, transparent 2px);
-  background-size: 90px 90px, 120px 120px, 70px 70px, 50px 50px, 60px 60px;
+  background-image: url("../assets/corkboard.jpg");
+  background-repeat: repeat;
+  background-size: 500px auto;
+  background-position: 0 0;
 }
 
 .viewport.mode-view {
@@ -134,6 +131,41 @@ body,
   color: #3b342a;
 }
 
+.card-sticky {
+  background: var(--card-color, #fef3c7);
+  padding: 14px 14px 10px;
+  border-radius: 0;
+  box-shadow: 0 10px 22px rgba(30, 16, 4, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 -14px 14px -14px rgba(0, 0, 0, 0.12);
+}
+
+.card-sticky .sticky-memo {
+  font-family: "Segoe Script", "Bradley Hand", cursive;
+  font-size: 15px;
+  line-height: 22px;
+  color: #2a2118;
+}
+
+.card-sticky .sticky-swatches {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.sticky-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  padding: 0;
+}
+.sticky-swatch.active {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 1px;
+}
+
 .card-document {
   background: var(--card-color, #e7ddc7);
   padding: 24px 16px 14px;
@@ -220,29 +252,16 @@ body,
 
 .pin {
   position: absolute;
-  top: -9px;
+  top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   z-index: 7;
-}
-
-.pin .head {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #ff8f83 0 18%, var(--yarn) 45%, #7c0f08 100%);
-  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.4);
-}
-.pin .glint {
-  position: absolute;
-  top: 3px;
-  left: 4px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .card.editable .pin {

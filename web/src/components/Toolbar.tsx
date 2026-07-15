@@ -46,7 +46,7 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <span className="brand">MK·ULTRA</span>
+      <span className="brand">Interactive Corkboard</span>
       <div className="mode-toggle">
         <button
           className={mode === "view" ? "active" : ""}
@@ -66,6 +66,7 @@ export function Toolbar() {
         <>
           <span className="sep" />
           <button onClick={() => addCard("text")} title="Add index card">＋ Note</button>
+          <button onClick={() => addCard("sticky")} title="Add sticky note">＋ Sticky</button>
           <button onClick={() => addCard("photo")} title="Add photo">＋ Photo</button>
           <button onClick={() => addCard("document")} title="Add document">＋ Doc</button>
         </>

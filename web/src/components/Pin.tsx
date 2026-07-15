@@ -1,5 +1,6 @@
 import { useBoard } from "../store/boardStore";
 import { useBoardContext } from "./BoardContext";
+import pinImage from "../assets/pin.png";
 
 /** The push-pin at a card's top-center; also the handle to draw a string. */
 export function Pin({ cardId }: { cardId: string }) {
@@ -14,9 +15,12 @@ export function Pin({ cardId }: { cardId: string }) {
   };
 
   return (
-    <div className="pin" onPointerDown={onPointerDown} title={mode === "edit" ? "Drag to connect" : undefined}>
-      <div className="head" />
-      <div className="glint" />
-    </div>
+    <img
+      src={pinImage}
+      className="pin"
+      draggable={false}
+      onPointerDown={onPointerDown}
+      title={mode === "edit" ? "Drag to connect" : undefined}
+    />
   );
 }

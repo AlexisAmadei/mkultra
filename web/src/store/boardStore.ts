@@ -12,13 +12,18 @@ const DEFAULT_SIZE: Record<CardType, { width: number; height: number }> = {
   text: { width: 240, height: 170 },
   photo: { width: 220, height: 250 },
   document: { width: 240, height: 180 },
+  sticky: { width: 180, height: 180 },
 };
 
 const DEFAULT_COLOR: Record<CardType, string> = {
   text: "#fef3c7", // sticky yellow
   photo: "#ffffff",
   document: "#e7ddc7", // aged paper
+  sticky: "#fef3c7",
 };
+
+/** Pastel swatches sticky notes can be assigned, cycled at creation time. */
+export const STICKY_COLORS = ["#fef3c7", "#ffd6e8", "#d6f0ff", "#d9f7d6", "#e6d9ff", "#ffe3c2"];
 
 function defaultsFor(type: CardType, at: Vec2): Omit<Card, "id"> {
   const size = DEFAULT_SIZE[type];
@@ -34,7 +39,7 @@ function defaultsFor(type: CardType, at: Vec2): Omit<Card, "id"> {
     width: size.width,
     height: size.height,
     rotation: Math.round((Math.random() - 0.5) * 6), // subtle tilt
-    color: DEFAULT_COLOR[type],
+    color: type === "sticky" ? STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)] : DEFAULT_COLOR[type],
     z: Date.now(),
   };
 }

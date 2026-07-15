@@ -9,16 +9,28 @@ import { StringLayer } from "./StringLayer";
 import { Toolbar } from "./Toolbar";
 import type { Transform, Vec2 } from "../types";
 
+const CORK_TILE_PX = 500;
+
 /** Applies the store transform to the world div imperatively (no card re-render on pan). */
-function WorldLayer({ children }: { children: React.ReactNode }) {
+function WorldLayer({
+  children,
+  viewportRef,
+}: {
+  children: React.ReactNode;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const apply = (t: Transform) => {
       if (ref.current) ref.current.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
+      if (viewportRef.current) {
+        viewportRef.current.style.backgroundSize = `${CORK_TILE_PX * t.scale}px auto`;
+        viewportRef.current.style.backgroundPosition = `${t.tx}px ${t.ty}px`;
+      }
     };
     apply(useBoard.getState().transform);
     return useBoard.subscribe((s) => s.transform, apply);
-  }, []);
+  }, [viewportRef]);
   return (
     <div className="world" ref={ref}>
       {children}
@@ -88,7 +100,7 @@ export function Board() {
           setEl(node);
         }}
       >
-        <WorldLayer>
+        <WorldLayer viewportRef={viewportRef}>
           <StringLayer pending={pending} />
           <CardLayer />
         </WorldLayer>
