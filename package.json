@@ -1,18 +1,19 @@
 {
-  "name": "mkultra",
+  "name": "interactive-corkboard",
   "version": "1.0.0",
-  "description": "Interactive conspiracy-corkboard mindmap visualizer",
+  "description": "Interactive corkboard editor and visualizer",
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "setup": "npm --prefix web install && npm run pb:migrate",
+    "setup": "pnpm install && pnpm run pb:migrate",
     "pb": "cd pb && ./pocketbase serve --http=127.0.0.1:8090",
     "pb:migrate": "cd pb && ./pocketbase migrate up",
-    "web": "npm --prefix web run dev",
-    "dev": "concurrently -n pb,web -c yellow,cyan \"npm run pb\" \"npm run web\"",
-    "test": "npm --prefix web run test"
+    "web": "pnpm --filter web run dev",
+    "dev": "concurrently -n pb,web -c yellow,cyan \"pnpm run pb\" \"pnpm run web\"",
+    "test": "pnpm --filter web run test"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"
-  }
+  },
+  "packageManager": "pnpm@10.28.2"
 }
