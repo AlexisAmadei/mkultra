@@ -105,7 +105,9 @@ export function Card({ card }: { card: CardT }) {
 function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
   const editStart = useRef<CardT | null>(null);
   const patch = (p: Partial<CardT>) => useBoard.getState().updateCardLocal(card.id, p);
-  const autoGrow = (el: HTMLTextAreaElement | null) => el && fitToContent(el);
+  const autoGrow = (el: HTMLTextAreaElement | null) => {
+    if (el) fitToContent(el);
+  };
   const beginEdit = () => (editStart.current = { ...card });
   const saveEdit = () => {
     if (editStart.current) void useBoard.getState().commitEdit(card.id, editStart.current);
