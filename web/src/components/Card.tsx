@@ -20,6 +20,7 @@ function fitToContent(el: HTMLTextAreaElement) {
 
 export function Card({ card }: { card: CardT }) {
   const mode = useBoard((s) => s.mode);
+  const ordering = useBoard((s) => s.ordering);
   const selected = useBoard((s) => s.selectedId === card.id);
   const editable = mode === "edit";
   const { viewportRef } = useBoardContext();
@@ -29,6 +30,12 @@ export function Card({ card }: { card: CardT }) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (isInteractiveTarget(e.target as HTMLElement)) return;
+    // Order sub-mode: a click assigns/unassigns the card's sequence number.
+    if (editable && ordering) {
+      e.stopPropagation();
+      void useBoard.getState().toggleCardOrder(card.id);
+      return;
+    }
     // Bring to front + select regardless of mode; only drag in edit mode.
     useBoard.getState().select(card.id);
     if (!editable) return;
@@ -67,7 +74,7 @@ export function Card({ card }: { card: CardT }) {
 
   return (
     <div
-      className={`card card-${card.type}${card.type === "sticky" && card.width <= STICKY_SIZES.small.width ? " card-sticky-small" : ""}${editable ? " editable" : ""}${selected ? " selected" : ""}`}
+      className={`card card-${card.type}${card.type === "sticky" && card.width <= STICKY_SIZES.small.width ? " card-sticky-small" : ""}${editable ? " editable" : ""}${editable && ordering ? " ordering" : ""}${selected ? " selected" : ""}`}
       style={{
         left: card.x,
         top: card.y,
@@ -85,6 +92,11 @@ export function Card({ card }: { card: CardT }) {
       onDoubleClick={onDoubleClick}
     >
       <Pin cardId={card.id} />
+      {card.order > 0 && mode !== "view" && (
+        <div className="card-order-badge" title={`Order ${card.order}`}>
+          {card.order}
+        </div>
+      )}
       {editable && (
         <button
           className="card-delete"

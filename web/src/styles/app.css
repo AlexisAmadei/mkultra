@@ -37,6 +37,9 @@ body,
 .viewport.mode-view {
   cursor: grab;
 }
+.viewport.mode-present {
+  cursor: default;
+}
 
 /* Warm vignette framing the board. */
 .vignette {
@@ -347,6 +350,50 @@ textarea.card-title {
 }
 .card.selected .card-delete {
   display: block;
+}
+
+/* Presentation order badge (top-left of a numbered card). */
+.card-order-badge {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--ui-accent);
+  color: #241a08;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 24px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* In the Order sub-mode, the whole card is a click target: neutralize the
+   inner editors/pin so a click anywhere assigns/unassigns the order number. */
+.card.ordering {
+  cursor: pointer;
+}
+.card.ordering textarea,
+.card.ordering input,
+.card.ordering .pin,
+.card.ordering .photo-frame,
+.card.ordering .sticky-swatches,
+.card.ordering .sticky-sizes,
+.card.ordering .card-delete {
+  pointer-events: none;
+}
+
+.present-counter {
+  min-width: 48px;
+  text-align: center;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-fg);
 }
 
 /* ---- Pins --------------------------------------------------------------- */
