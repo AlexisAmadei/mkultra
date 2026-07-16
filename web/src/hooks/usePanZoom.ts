@@ -110,7 +110,7 @@ export function animateTransform(to: Transform) {
 export function focusRect(
   el: HTMLElement | null,
   rect: { x: number; y: number; width: number; height: number },
-  targetScale = 1.4,
+  targetScale = 1.1,
 ) {
   if (!el) return;
   const r = el.getBoundingClientRect();
