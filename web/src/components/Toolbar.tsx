@@ -1,4 +1,4 @@
-import { STICKY_SIZES, useBoard } from "../store/boardStore";
+import { useBoard } from "../store/boardStore";
 import { useBoardContext } from "./BoardContext";
 import { animateTransform } from "../hooks/usePanZoom";
 import { frameRect, screenToWorld, zoomToCursor } from "../hooks/panzoom-math";
