@@ -25,6 +25,13 @@ const DEFAULT_COLOR: Record<CardType, string> = {
 /** Pastel swatches sticky notes can be assigned, cycled at creation time. */
 export const STICKY_COLORS = ["#fef3c7", "#ffd6e8", "#d6f0ff", "#d9f7d6", "#e6d9ff", "#ffe3c2"];
 
+/** Size presets sticky notes can be created or resized to. */
+export const STICKY_SIZES = {
+  small: { width: 90, height: 90 },
+  default: { width: 180, height: 180 },
+} as const;
+export type StickySizeKey = keyof typeof STICKY_SIZES;
+
 /** Cap on how many actions the undo/redo history retains. */
 const HISTORY_LIMIT = 100;
 
@@ -61,8 +68,12 @@ function cardPayload(c: Card) {
   };
 }
 
-function defaultsFor(type: CardType, at: Vec2): Omit<Card, "id"> {
-  const size = DEFAULT_SIZE[type];
+function defaultsFor(
+  type: CardType,
+  at: Vec2,
+  sizeOverride?: { width: number; height: number },
+): Omit<Card, "id"> {
+  const size = sizeOverride ?? DEFAULT_SIZE[type];
   return {
     type,
     title: type === "text" ? "" : type === "photo" ? "" : "Document",
@@ -109,7 +120,11 @@ interface BoardState {
 
   load: () => Promise<void>;
 
-  addCard: (type: CardType, at: Vec2) => Promise<string | null>;
+  addCard: (
+    type: CardType,
+    at: Vec2,
+    sizeOverride?: { width: number; height: number },
+  ) => Promise<string | null>;
   /** Optimistic local update without persisting (use during drags). */
   updateCardLocal: (id: string, patch: Partial<Card>) => void;
   /** Persist the current local state of a card to PocketBase. */
@@ -244,12 +259,12 @@ export const useBoard = create<BoardState>()(
         }
       },
 
-      addCard: async (type, at) => {
+      addCard: async (type, at, sizeOverride) => {
         // Cascade new cards so successive adds at the same point don't fully overlap.
         const step = (Object.keys(get().cards).length % 6) * 26;
         const card: Card = {
           id: newId(),
-          ...defaultsFor(type, { x: at.x + step, y: at.y + step }),
+          ...defaultsFor(type, { x: at.x + step, y: at.y + step }, sizeOverride),
         };
         set((s) => ({ cards: { ...s.cards, [card.id]: card }, selectedId: card.id }));
         try {

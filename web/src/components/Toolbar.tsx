@@ -1,4 +1,4 @@
-import { useBoard } from "../store/boardStore";
+import { STICKY_SIZES, useBoard } from "../store/boardStore";
 import { useBoardContext } from "./BoardContext";
 import { animateTransform } from "../hooks/usePanZoom";
 import { frameRect, screenToWorld, zoomToCursor } from "../hooks/panzoom-math";
@@ -12,13 +12,13 @@ export function Toolbar() {
 
   const viewportRect = () => viewportRef.current?.getBoundingClientRect();
 
-  const addCard = (type: CardType) => {
+  const addCard = (type: CardType, sizeOverride?: { width: number; height: number }) => {
     const r = viewportRect();
     const t = useBoard.getState().transform;
     const center = r
       ? screenToWorld({ x: r.width / 2, y: r.height / 2 }, t)
       : { x: 0, y: 0 };
-    void useBoard.getState().addCard(type, center);
+    void useBoard.getState().addCard(type, center, sizeOverride);
   };
 
   const zoom = (factor: number) => {
@@ -48,7 +48,7 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <span className="brand">Interactive Corkboard</span>
+      <span className="brand">PROJET MK-ULTRA</span>
       <div className="mode-toggle">
         <button
           className={mode === "view" ? "active" : ""}
@@ -74,21 +74,25 @@ export function Toolbar() {
         </>
       )}
 
-      <span className="sep" />
-      <button
-        onClick={() => void useBoard.getState().undo()}
-        disabled={!canUndo}
-        title="Undo (Ctrl+Z)"
-      >
-        ↶ Undo
-      </button>
-      <button
-        onClick={() => void useBoard.getState().redo()}
-        disabled={!canRedo}
-        title="Redo"
-      >
-        ↷ Redo
-      </button>
+      {mode === "edit" && (
+        <>
+          <span className="sep" />
+          <button
+            onClick={() => void useBoard.getState().undo()}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+          >
+            ↶ Undo
+          </button>
+          <button
+            onClick={() => void useBoard.getState().redo()}
+            disabled={!canRedo}
+            title="Redo"
+          >
+            ↷ Redo
+          </button>
+        </>
+      )}
 
       <span className="sep" />
       <button onClick={() => zoom(1.25)} title="Zoom in">＋</button>

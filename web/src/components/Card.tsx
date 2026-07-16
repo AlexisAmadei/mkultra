@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { STICKY_COLORS, useBoard } from "../store/boardStore";
+import { STICKY_COLORS, STICKY_SIZES, useBoard } from "../store/boardStore";
 import { fileUrl } from "../lib/pocketbase";
 import type { Card as CardT } from "../types";
 import { Pin } from "./Pin";
@@ -61,7 +61,7 @@ export function Card({ card }: { card: CardT }) {
 
   return (
     <div
-      className={`card card-${card.type}${editable ? " editable" : ""}${selected ? " selected" : ""}`}
+      className={`card card-${card.type}${card.type === "sticky" && card.width <= STICKY_SIZES.small.width ? " card-sticky-small" : ""}${editable ? " editable" : ""}${selected ? " selected" : ""}`}
       style={{
         left: card.x,
         top: card.y,
@@ -215,6 +215,33 @@ function StickyBody({ card, editable }: { card: CardT; editable: boolean }) {
                 void useBoard.getState().commitEdit(card.id, before);
               }}
             />
+          ))}
+        </div>
+      )}
+      {editable && (
+        <div className="sticky-sizes">
+          {Object.entries(STICKY_SIZES).map(([key, size]) => (
+            <button
+              key={key}
+              className={`sticky-size-btn${card.width === size.width && card.height === size.height ? " active" : ""}`}
+              title={key === "small" ? "Small size" : "Default size"}
+              onClick={(e) => {
+                e.stopPropagation();
+                const before = { ...card };
+                // Resize around the card's current center so it doesn't jump.
+                const cx = card.x + card.width / 2;
+                const cy = card.y + card.height / 2;
+                useBoard.getState().updateCardLocal(card.id, {
+                  width: size.width,
+                  height: size.height,
+                  x: Math.round(cx - size.width / 2),
+                  y: Math.round(cy - size.height / 2),
+                });
+                void useBoard.getState().commitCardMove(card.id, before);
+              }}
+            >
+              {key === "small" ? "S" : "M"}
+            </button>
           ))}
         </div>
       )}
