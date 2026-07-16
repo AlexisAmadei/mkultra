@@ -249,6 +249,15 @@ body,
   font-family: inherit;
 }
 
+/* Title editor wraps long titles onto new lines instead of scrolling. */
+textarea.card-title {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 20px;
+}
+
 .card-body {
   flex: 1;
   font-size: 13px;

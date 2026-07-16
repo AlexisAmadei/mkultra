@@ -12,6 +12,12 @@ function isInteractiveTarget(target: HTMLElement): boolean {
   return INTERACTIVE.has(target.tagName) || target.closest(".photo-frame") !== null;
 }
 
+// Grow a textarea to fit its content so wrapped title lines stay visible.
+function fitToContent(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
+
 export function Card({ card }: { card: CardT }) {
   const mode = useBoard((s) => s.mode);
   const selected = useBoard((s) => s.selectedId === card.id);
@@ -99,6 +105,7 @@ export function Card({ card }: { card: CardT }) {
 function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
   const editStart = useRef<CardT | null>(null);
   const patch = (p: Partial<CardT>) => useBoard.getState().updateCardLocal(card.id, p);
+  const autoGrow = (el: HTMLTextAreaElement | null) => el && fitToContent(el);
   const beginEdit = () => (editStart.current = { ...card });
   const saveEdit = () => {
     if (editStart.current) void useBoard.getState().commitEdit(card.id, editStart.current);
@@ -149,12 +156,17 @@ function CardBody({ card, editable }: { card: CardT; editable: boolean }) {
     <>
       {editable ? (
         <>
-          <input
+          <textarea
             className="card-title"
+            rows={1}
+            ref={autoGrow}
             value={card.title}
             placeholder="Title"
             onFocus={beginEdit}
-            onChange={(e) => patch({ title: e.target.value })}
+            onChange={(e) => {
+              fitToContent(e.currentTarget);
+              patch({ title: e.target.value });
+            }}
             onBlur={saveEdit}
           />
           <textarea
