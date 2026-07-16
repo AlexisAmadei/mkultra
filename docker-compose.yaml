@@ -1,0 +1,28 @@
+services:
+  pocketbase:
+    build:
+      context: ./pb
+    restart: unless-stopped
+    volumes:
+      - pb_data:/pb/pb_data
+    networks:
+      - internal
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - pocketbase
+    networks:
+      - internal
+      - caddy_net
+
+networks:
+  internal:
+  caddy_net:
+    external: true
+
+volumes:
+  pb_data:
