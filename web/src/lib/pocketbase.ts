@@ -25,6 +25,7 @@ const CARD_FIELDS = [
   "rotation",
   "color",
   "z",
+  "order",
 ] as const;
 
 export function recordToCard(r: RecordModel): Card {
@@ -43,6 +44,7 @@ export function recordToCard(r: RecordModel): Card {
     rotation: Number(r.rotation ?? 0),
     color: r.color ?? "",
     z: Number(r.z ?? 0),
+    order: Number(r.order ?? 0),
   };
 }
 

@@ -65,6 +65,7 @@ function cardPayload(c: Card) {
     rotation: c.rotation,
     color: c.color,
     z: c.z,
+    order: c.order,
   };
 }
 
@@ -88,6 +89,7 @@ function defaultsFor(
     rotation: Math.round((Math.random() - 0.5) * 6), // subtle tilt
     color: type === "sticky" ? STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)] : DEFAULT_COLOR[type],
     z: Date.now(),
+    order: 0,
   };
 }
 
@@ -104,6 +106,10 @@ interface BoardState {
   transform: Transform;
   mode: Mode;
   selectedId: string | null;
+  /** In edit mode: clicking a card assigns/unassigns its presentation order. */
+  ordering: boolean;
+  /** Index into the ordered-card list for present mode (0-based). */
+  presentStep: number;
   loaded: boolean;
   error: string | null;
 
@@ -117,6 +123,8 @@ interface BoardState {
   setTransform: (t: Transform) => void;
   setMode: (m: Mode) => void;
   select: (id: string | null) => void;
+  setOrdering: (on: boolean) => void;
+  setPresentStep: (step: number) => void;
 
   load: () => Promise<void>;
 
@@ -142,6 +150,9 @@ interface BoardState {
   removeConnection: (id: string) => Promise<void>;
   /** Change a string's color and persist it (undoable). */
   setConnectionColor: (id: string, color: string) => Promise<void>;
+
+  /** Assign the next order number to a card, or unassign it (renumbering to stay 1..X contiguous). Undoable. */
+  toggleCardOrder: (id: string) => Promise<void>;
 
   undo: () => Promise<void>;
   redo: () => Promise<void>;
@@ -248,6 +259,8 @@ export const useBoard = create<BoardState>()(
       transform: { tx: 0, ty: 0, scale: 1 },
       mode: "view",
       selectedId: null,
+      ordering: false,
+      presentStep: 0,
       loaded: false,
       error: null,
       past: [],
@@ -255,8 +268,16 @@ export const useBoard = create<BoardState>()(
       isReplaying: false,
 
       setTransform: (t) => set({ transform: t }),
-      setMode: (mode) => set({ mode, selectedId: mode === "view" ? null : get().selectedId }),
+      setMode: (mode) =>
+        set({
+          mode,
+          selectedId: mode === "edit" ? get().selectedId : null,
+          ordering: false,
+          presentStep: mode === "present" ? 0 : get().presentStep,
+        }),
       select: (id) => set({ selectedId: id }),
+      setOrdering: (on) => set({ ordering: on }),
+      setPresentStep: (step) => set({ presentStep: step }),
 
       load: async () => {
         try {
@@ -318,6 +339,7 @@ export const useBoard = create<BoardState>()(
             rotation: card.rotation,
             color: card.color,
             z: card.z,
+            order: card.order,
           });
         } catch (e) {
           set({ error: (e as Error).message });
@@ -456,6 +478,57 @@ export const useBoard = create<BoardState>()(
           label: "recolor string",
           undo: () => setConnectionColorRaw(id, before),
           redo: () => setConnectionColorRaw(id, color),
+        });
+      },
+
+      toggleCardOrder: async (id) => {
+        const card = get().cards[id];
+        if (!card) return;
+
+        // Snapshot the order of every currently-numbered card so the whole
+        // renumber is one reversible step.
+        const before = new Map<string, number>();
+        for (const c of Object.values(get().cards)) {
+          if (c.order > 0) before.set(c.id, c.order);
+        }
+
+        // `after` is the complete target: every already-numbered card keeps its
+        // value unless the (re)numbering below changes it.
+        const after = new Map<string, number>(before);
+        if (card.order > 0) {
+          // Unassign: drop this card, then compact the rest to stay 1..X.
+          const remaining = [...before.entries()]
+            .filter(([cid]) => cid !== id)
+            .sort((a, b) => a[1] - b[1]);
+          after.clear();
+          remaining.forEach(([cid], i) => after.set(cid, i + 1));
+          after.set(id, 0);
+        } else {
+          // Assign: append at max+1, leaving existing numbers untouched.
+          const max = before.size === 0 ? 0 : Math.max(...before.values());
+          after.set(id, max + 1);
+        }
+
+        // Cards whose order actually changed (union of before/after keys).
+        const touched = new Set<string>([...before.keys(), ...after.keys()]);
+        const applyOrders = async (orders: Map<string, number>) => {
+          for (const cid of touched) {
+            const value = orders.get(cid) ?? 0;
+            if (get().cards[cid] && get().cards[cid].order !== value) {
+              await applyCardFields(cid, { order: value });
+            }
+          }
+        };
+
+        // `before` map omits value 0; fill it so undo resets cleared cards too.
+        const beforeFull = new Map<string, number>();
+        for (const cid of touched) beforeFull.set(cid, before.get(cid) ?? 0);
+
+        await applyOrders(after);
+        record({
+          label: "order card",
+          undo: () => applyOrders(beforeFull),
+          redo: () => applyOrders(after),
         });
       },
 

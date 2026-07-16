@@ -3,7 +3,7 @@ export type Vec2 = { x: number; y: number };
 /** Viewport transform: world -> screen is `translate(tx,ty) scale(scale)`. */
 export type Transform = { tx: number; ty: number; scale: number };
 
-export type Mode = "view" | "edit";
+export type Mode = "view" | "edit" | "present";
 
 export type CardType = "text" | "photo" | "document" | "sticky";
 
@@ -24,6 +24,8 @@ export interface Card {
   rotation: number;
   color: string;
   z: number;
+  /** Presentation sequence position (1..X); 0 means unassigned. */
+  order: number;
 }
 
 export interface Connection {

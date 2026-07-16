@@ -1,13 +1,17 @@
 import { useBoard } from "../store/boardStore";
 import { useBoardContext } from "./BoardContext";
 import { animateTransform } from "../hooks/usePanZoom";
+import { orderedCards } from "../hooks/usePresentation";
 import { frameRect, screenToWorld, zoomToCursor } from "../hooks/panzoom-math";
 import type { CardType } from "../types";
 
 export function Toolbar() {
   const mode = useBoard((s) => s.mode);
+  const ordering = useBoard((s) => s.ordering);
   const canUndo = useBoard((s) => s.past.length > 0);
   const canRedo = useBoard((s) => s.future.length > 0);
+  const presentStep = useBoard((s) => s.presentStep);
+  const orderedCount = useBoard((s) => orderedCards(s.cards).length);
   const { viewportRef } = useBoardContext();
 
   const viewportRect = () => viewportRef.current?.getBoundingClientRect();
@@ -62,6 +66,12 @@ export function Toolbar() {
         >
           Edit
         </button>
+        <button
+          className={mode === "present" ? "active" : ""}
+          onClick={() => useBoard.getState().setMode("present")}
+        >
+          Present
+        </button>
       </div>
 
       {mode === "edit" && (
@@ -71,6 +81,14 @@ export function Toolbar() {
           <button onClick={() => addCard("sticky")} title="Add sticky note">＋ Sticky</button>
           <button onClick={() => addCard("photo")} title="Add photo">＋ Photo</button>
           <button onClick={() => addCard("document")} title="Add document">＋ Doc</button>
+          <span className="sep" />
+          <button
+            className={ordering ? "active" : ""}
+            onClick={() => useBoard.getState().setOrdering(!ordering)}
+            title="Click cards in sequence to set presentation order"
+          >
+            # Order
+          </button>
         </>
       )}
 
@@ -90,6 +108,35 @@ export function Toolbar() {
             title="Redo"
           >
             ↷ Redo
+          </button>
+        </>
+      )}
+
+      {mode === "present" && (
+        <>
+          <span className="sep" />
+          <button
+            onClick={() =>
+              useBoard.getState().setPresentStep(Math.max(0, presentStep - 1))
+            }
+            disabled={presentStep <= 0}
+            title="Previous (←)"
+          >
+            ‹ Prev
+          </button>
+          <span className="present-counter">
+            {orderedCount === 0 ? "—" : `${presentStep + 1} / ${orderedCount}`}
+          </span>
+          <button
+            onClick={() =>
+              useBoard
+                .getState()
+                .setPresentStep(Math.min(orderedCount - 1, presentStep + 1))
+            }
+            disabled={presentStep >= orderedCount - 1}
+            title="Next (→ or Space)"
+          >
+            Next ›
           </button>
         </>
       )}
