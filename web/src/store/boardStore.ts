@@ -140,6 +140,8 @@ interface BoardState {
 
   addConnection: (fromCard: string, toCard: string) => Promise<void>;
   removeConnection: (id: string) => Promise<void>;
+  /** Change a string's color and persist it (undoable). */
+  setConnectionColor: (id: string, color: string) => Promise<void>;
 
   undo: () => Promise<void>;
   redo: () => Promise<void>;
@@ -212,6 +214,19 @@ export const useBoard = create<BoardState>()(
       });
       try {
         await connectionsApi.delete(id);
+      } catch (e) {
+        set({ error: (e as Error).message });
+      }
+    };
+
+    const setConnectionColorRaw = async (id: string, color: string) => {
+      set((s) => {
+        const conn = s.connections[id];
+        if (!conn) return s;
+        return { connections: { ...s.connections, [id]: { ...conn, color } } };
+      });
+      try {
+        await connectionsApi.update(id, { color });
       } catch (e) {
         set({ error: (e as Error).message });
       }
@@ -429,6 +444,18 @@ export const useBoard = create<BoardState>()(
           label: "disconnect",
           undo: () => insertConnectionRaw(snap),
           redo: () => deleteConnectionRaw(id),
+        });
+      },
+
+      setConnectionColor: async (id, color) => {
+        const conn = get().connections[id];
+        if (!conn || conn.color === color) return;
+        const before = conn.color;
+        await setConnectionColorRaw(id, color);
+        record({
+          label: "recolor string",
+          undo: () => setConnectionColorRaw(id, before),
+          redo: () => setConnectionColorRaw(id, color),
         });
       },
 
