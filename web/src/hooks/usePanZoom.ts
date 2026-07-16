@@ -49,9 +49,12 @@ export function usePanZoom(el: HTMLElement | null) {
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0 && e.button !== 1) return;
-      // Only pan from the empty board — never when starting on a card or pin.
-      // (React's stopPropagation can't stop this native listener, so check here.)
-      if ((e.target as Element | null)?.closest?.(".card")) return;
+      // Only pan from the empty board — never when starting on a card, pin, or
+      // yarn string. (React's stopPropagation can't stop this native listener, so
+      // check here.) Capturing the pointer below retargets the follow-up click to
+      // the viewport, so panning from those would swallow their onClick entirely.
+      const target = e.target as Element | null;
+      if (target?.closest?.(".card") || target?.closest?.(".string-layer")) return;
       panning = true;
       last = { x: e.clientX, y: e.clientY };
       el.setPointerCapture(e.pointerId);

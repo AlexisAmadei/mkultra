@@ -61,7 +61,7 @@ export function Card({ card }: { card: CardT }) {
   };
 
   const onDoubleClick = (e: React.MouseEvent) => {
-    if (isInteractiveTarget(e.target as HTMLElement)) return;
+    if (INTERACTIVE.has((e.target as HTMLElement).tagName)) return;
     focusRect(viewportRef.current, card);
   };
 
