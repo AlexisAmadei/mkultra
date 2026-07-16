@@ -28,12 +28,12 @@ body,
   touch-action: none;
   overflow: hidden;
   background-color: #b8894b;
-  background-image: url("../assets/corkboard.jpg");
+  background-image: url("../assets/cork.png");
   background-repeat: repeat;
   background-size: 500px auto;
   background-position: 0 0;
 }
-
+&
 .viewport.mode-view {
   cursor: grab;
 }
@@ -44,7 +44,7 @@ body,
   inset: 0;
   pointer-events: none;
   z-index: 40;
-  box-shadow: inset 0 0 220px 60px rgba(40, 24, 8, 0.55);
+  box-shadow: inset 0 0 220px 60px rgba(40, 24, 8, 0.347);
 }
 
 .world {
