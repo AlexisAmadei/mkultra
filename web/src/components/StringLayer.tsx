@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useBoard } from "../store/boardStore";
 import { pinAnchor, yarnPath } from "../lib/geometry";
 import type { Vec2 } from "../types";
@@ -93,7 +94,7 @@ export function StringLayer({ pending }: { pending: { from: Vec2; to: Vec2 } | n
         )}
       </svg>
 
-      {menu && (
+      {menu && createPortal(
         <div
           className="string-color-menu"
           style={{ position: "fixed", left: menu.x, top: menu.y, zIndex: 1000 }}
@@ -118,7 +119,8 @@ export function StringLayer({ pending }: { pending: { from: Vec2; to: Vec2 } | n
               {c.name}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
