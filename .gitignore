@@ -7,6 +7,9 @@ web/node_modules/
 pb/pb_data/
 pb/pocketbase
 
+# backups
+/backups/
+
 # misc
 .DS_Store
 *.log

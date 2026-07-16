@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Backs up the PocketBase data directory (db + storage) to backups/<timestamp>.tar.gz
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="$ROOT_DIR/backups"
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+ARCHIVE="$BACKUP_DIR/pb_data-$TIMESTAMP.tar.gz"
+
+mkdir -p "$BACKUP_DIR"
+
+if docker compose ps pocketbase 2>/dev/null | grep -q "Up"; then
+  echo "Backing up from running Docker volume..."
+  MSYS_NO_PATHCONV=1 docker run --rm \
+    -v mkultra2_pb_data:/pb_data:ro \
+    -v "$BACKUP_DIR":/backup \
+    alpine \
+    tar -czf "/backup/pb_data-$TIMESTAMP.tar.gz" -C / pb_data
+else
+  echo "Backing up from local pb/pb_data..."
+  tar -czf "$ARCHIVE" -C "$ROOT_DIR/pb" pb_data
+fi
+
+echo "Backup written to $ARCHIVE"
