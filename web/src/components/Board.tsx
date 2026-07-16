@@ -9,6 +9,7 @@ import { BoardContext } from "./BoardContext";
 import { CardLayer } from "./CardLayer";
 import { StringLayer } from "./StringLayer";
 import { Toolbar } from "./Toolbar";
+import { OrderDrawer } from "./OrderDrawer";
 import type { Transform, Vec2 } from "../types";
 
 const CORK_TILE_PX = 500;
@@ -111,6 +112,7 @@ export function Board() {
       </div>
       <div className="vignette" />
       <Toolbar />
+      <OrderDrawer />
       {error && <div className="error-banner">Sync error: {error}</div>}
       <div className="hint">
         {mode === "edit"

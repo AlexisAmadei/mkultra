@@ -153,6 +153,8 @@ interface BoardState {
 
   /** Assign the next order number to a card, or unassign it (renumbering to stay 1..X contiguous). Undoable. */
   toggleCardOrder: (id: string) => Promise<void>;
+  /** Renumber the ordered cards to match the given id sequence (1..X). Undoable. */
+  reorderCards: (orderedIds: string[]) => Promise<void>;
 
   undo: () => Promise<void>;
   redo: () => Promise<void>;
@@ -528,6 +530,32 @@ export const useBoard = create<BoardState>()(
         record({
           label: "order card",
           undo: () => applyOrders(beforeFull),
+          redo: () => applyOrders(after),
+        });
+      },
+
+      reorderCards: async (orderedIds) => {
+        const ids = orderedIds.filter((cid) => get().cards[cid]);
+        const before = new Map<string, number>();
+        for (const cid of ids) before.set(cid, get().cards[cid].order);
+        const after = new Map<string, number>();
+        ids.forEach((cid, i) => after.set(cid, i + 1));
+
+        // No-op if the sequence already matches (avoids empty undo entries).
+        if (ids.every((cid, i) => before.get(cid) === i + 1)) return;
+
+        const applyOrders = async (orders: Map<string, number>) => {
+          for (const cid of ids) {
+            const value = orders.get(cid) ?? 0;
+            if (get().cards[cid] && get().cards[cid].order !== value) {
+              await applyCardFields(cid, { order: value });
+            }
+          }
+        };
+        await applyOrders(after);
+        record({
+          label: "reorder cards",
+          undo: () => applyOrders(before),
           redo: () => applyOrders(after),
         });
       },
