@@ -484,6 +484,27 @@ textarea.card-title {
   font-weight: 700;
 }
 
+/* Order sub-mode toggle: outlined dot when off, filled accent when on.
+   Keeps the standard squared-rounded .toolbar button shape. */
+.order-toggle__dot {
+  font-size: 11px;
+  line-height: 1;
+  margin-right: 5px;
+  color: var(--ui-accent);
+}
+.order-toggle.active {
+  background: var(--ui-accent);
+  border-color: var(--ui-accent);
+  color: #241a08;
+  font-weight: 700;
+}
+.order-toggle.active:hover:not(:disabled) {
+  background: var(--ui-accent);
+}
+.order-toggle.active .order-toggle__dot {
+  color: #241a08;
+}
+
 .hint {
   position: fixed;
   bottom: 14px;

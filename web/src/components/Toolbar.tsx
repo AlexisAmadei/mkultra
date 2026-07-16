@@ -83,11 +83,12 @@ export function Toolbar() {
           <button onClick={() => addCard("document")} title="Add document">＋ Doc</button>
           <span className="sep" />
           <button
-            className={ordering ? "active" : ""}
+            className={`order-toggle${ordering ? " active" : ""}`}
             onClick={() => useBoard.getState().setOrdering(!ordering)}
             title="Click cards in sequence to set presentation order"
           >
-            # Order
+            <span className="order-toggle__dot" aria-hidden>{ordering ? "●" : "○"}</span>
+            Order
           </button>
         </>
       )}
